@@ -1,0 +1,8 @@
+twimlLimit: 10
+twilioAccount:
+        accountSid: <Your Account SID>
+        authToken: <Your Auth Token>
+phoneNumbers:
+        - name: <Name of this Phone Number Forwarder>
+          phoneNumber: <Phone Number in E.164 Format>
+          groupId: <groups.id in the Database>
