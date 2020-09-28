@@ -39,7 +39,7 @@ import dev.obx.Twilio2FAForwarder.Config.TwilioConfig;
  */
 @WebServlet("/sms")
 public class SMSForwarder extends HttpServlet {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     // Logger
     protected static Logger logger = Logger.getLogger("dev.obx.SMSForwarder");
@@ -99,6 +99,8 @@ public class SMSForwarder extends HttpServlet {
         String to; // To
         String from; // From
         String body; // Body
+        
+        response.setContentType("application/xml");
 
         accountSid = coalesce(request.getParameter("AccountSid"));
         //messageSid = coalesce(request.getParameter("MessageSid"));
@@ -138,14 +140,14 @@ public class SMSForwarder extends HttpServlet {
         
         String message = "From: " + from + "\nMessage:\n" + body;
         if(numRecipients <= twilioConfig.twimlLimit) {
-            sendViaTwiml(response, out, pn.get(0), to, from, message);
+            sendViaTwiml(response, out, pn.get(0), message);
         } else {
-            sendViaExecutor(response, out, pn.get(0), to, from, message);
+            sendViaExecutor(response, out, pn.get(0), from, message);
         }
         
     }
     
-    private void sendViaTwiml(HttpServletResponse response, PrintWriter out, TwoFAPhoneNumber pn, String to, String from, String message) throws IOException {
+    private void sendViaTwiml(HttpServletResponse response, PrintWriter out, TwoFAPhoneNumber pn, String message) throws IOException {
         
         ArrayList<String> mobiles = new ArrayList<String>();
         try (Connection con = dataSource.getConnection()){
@@ -167,7 +169,7 @@ public class SMSForwarder extends HttpServlet {
         
         
         for(String mobile: mobiles) {
-            mBuilder = mBuilder.message(new com.twilio.twiml.messaging.Message.Builder(message).to(mobile).from(from).build());
+            mBuilder = mBuilder.message(new com.twilio.twiml.messaging.Message.Builder(message).to(mobile).from(pn.phoneNumber).build());
         }
         
         try {
@@ -179,7 +181,7 @@ public class SMSForwarder extends HttpServlet {
         
     }
     
-    private void sendViaExecutor(HttpServletResponse response, PrintWriter out, TwoFAPhoneNumber pn, String to, String from, String message) {
+    private void sendViaExecutor(HttpServletResponse response, PrintWriter out, TwoFAPhoneNumber pn, String from, String message) {
         
         // Send a blank response document.
         Builder mBuilder = new MessagingResponse.Builder();
